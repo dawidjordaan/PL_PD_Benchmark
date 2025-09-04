@@ -67,7 +67,8 @@ def process_data(file_paths: List[str]) -> Tuple[pl.DataFrame, pl.DataFrame]:
             pl.lit(-1).alias("change"),
         ]
     )
-    events_lf = pl.concat([pickups_lf, dropoffs_lf]).sort("event_time")
+    # Deterministic order at identical timestamps: apply pickups (+1) before dropoffs (-1)
+    events_lf = pl.concat([pickups_lf, dropoffs_lf]).sort(["event_time", "change"], descending=[False, True])
     active_trips_lf = events_lf.with_columns(
         pl.col("change").cum_sum().alias("active_trips")
     ).select(["event_time", "active_trips"])  # retain only required columns

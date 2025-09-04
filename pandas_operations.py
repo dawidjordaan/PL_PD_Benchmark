@@ -83,7 +83,8 @@ def process_data(file_paths: List[str]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     )
 
     events = pd.concat([pickups, dropoffs], ignore_index=True)
-    events = events.sort_values("event_time")
+    # Deterministic order at identical timestamps: apply pickups (+1) before dropoffs (-1)
+    events = events.sort_values(["event_time", "change"], ascending=[True, False])
     events["active_trips"] = events["change"].cumsum()
     active_trips_df = events[["event_time", "active_trips"]].reset_index(drop=True)
 
